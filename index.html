@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Grabador Offline</title>
+<style>
+  body { font-family: Arial; background:#111; color:#fff; padding:20px; }
+  video { width: 100%; max-width:600px; margin-top:20px; background:#000; }
+  button { margin:5px; padding:10px 15px; font-size:16px; }
+</style>
+</head>
+<body>
+
+<h2>Grabador Offline (Cámara / Micrófono / Pantalla)</h2>
+
+<button id="cam">Grabar Cámara</button>
+<button id="screen">Grabar Pantalla</button>
+<button id="stop" disabled>Detener</button>
+
+<video id="preview" autoplay muted></video>
+
+<script>
+let recorder, stream;
+
+async function startCamera() {
+    stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+    startRecording();
+}
+
+async function startScreen() {
+    stream = await navigator.mediaDevices.getDisplayMedia({ video:true, audio:true });
+    startRecording();
+}
+
+function startRecording() {
+    document.getElementById("preview").srcObject = stream;
+    recorder = new MediaRecorder(stream);
+
+    let chunks = [];
+    recorder.ondataavailable = e => chunks.push(e.data);
+
+    recorder.onstop = () => {
+        let blob = new Blob(chunks, { type: "video/webm" });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = "grabacion.webm";
+        a.click();
+    };
+
+    recorder.start();
+    document.getElementById("stop").disabled = false;
+}
+
+document.getElementById("cam").onclick = startCamera;
+document.getElementById("screen").onclick = startScreen;
+document.getElementById("stop").onclick = () => recorder.stop();
+</script>
+
+</body>
+</html>
