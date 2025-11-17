@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mi DVR Local</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- PANEL IZQUIERDO (menu fotito) -->
+  <aside class="sidebar">
+      <h2>Panel</h2>
+
+      <button id="btnCam">📷 Cámara</button>
+      <button id="btnScreen">🖥 Pantalla</button>
+      <button id="btnStop" disabled>⛔ Detener</button>
+
+      <hr>
+
+      <label>Intervalo (seg):
+        <input id="interval" type="number" min="5" value="60">
+      </label>
+      <button id="btnInterval">⏳ Intervalos</button>
+
+      <button id="btnHide">🙈 Modo oculto</button>
+
+      <hr>
+
+      <h3>Historial</h3>
+      <ul id="list"></ul>
+  </aside>
+
+
+  <!-- PREVIEW CENTRO -->
+  <main class="main">
+      <h1>DVR Casero</h1>
+      <video id="preview" autoplay muted playsinline></video>
+
+      <div class="timer" id="timer">00:00</div>
+  </main>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
