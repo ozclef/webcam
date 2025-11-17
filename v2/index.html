@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mi DVR Casero - Panel</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>Panel DVR / Grabador</h1>
+</header>
+
+<section class="controls">
+  <button id="camBtn">Grabar Cámara</button>
+  <button id="screenBtn">Grabar Pantalla</button>
+  <button id="stopBtn" disabled>Detener</button>
+
+  <label>Intervalo (seg): <input id="intervalSeconds" type="number" value="60" min="5"></label>
+  <button id="startIntervalBtn">Grabar por Intervalos</button>
+  <button id="motionBtn">Activar Detección de Movimiento</button>
+  <button id="hideBtn">Modo Oculto (pantalla negra)</button>
+  <button id="convertBtn">Convertir último a MP4 (opcional)</button>
+</section>
+
+<section class="preview">
+  <video id="preview" autoplay playsinline muted></video>
+</section>
+
+<section class="history">
+  <h2>Historial de Grabaciones</h2>
+  <ul id="clipsList"></ul>
+</section>
+
+<section class="scanner">
+  <h2>Escáner (códigos / QR)</h2>
+  <video id="scannerPreview" autoplay playsinline muted></video>
+  <div id="scanResult">—</div>
+</section>
+
+<script src="libs/quagga.min.js"></script> <!-- si usarás scanner -->
+<script src="js/motion.js"></script>
+<script src="js/recorder.js"></script>
+<script src="js/scanner.js"></script>
+<script>
+  // Inicializa el panel conectando botones con recorder.js
+  const preview = document.getElementById('preview');
+  const recorder = new RecorderModule(preview, {
+    onNewClip: clip => addClipToList(clip)
+  });
+
+  document.getElementById('camBtn').onclick = () => recorder.startCamera();
+  document.getElementById('screenBtn').onclick = () => recorder.startScreen();
+  document.getElementById('stopBtn').onclick = () => recorder.stopCurrent();
+  document.getElementById('startIntervalBtn').onclick = () => {
+    const s = parseInt(document.getElementById('intervalSeconds').value||60);
+    recorder.startInterval(s);
+  };
+  document.getElementById('motionBtn').onclick = async () => {
+    const onMotion = () => recorder.startCamera();
+    const offMotion = () => recorder.stopCurrent();
+    MotionModule.toggle(preview, onMotion, offMotion);
+  };
+  document.getElementById('hideBtn').onclick = () => {
+    document.body.requestFullscreen?.(); // opcional
+    document.body.style.background = '#000';
+    preview.style.opacity = 0; // pantalla "apagada" pero sigue grabando
+  };
+
+  function addClipToList(clip) {
+    const li = document.createElement('li');
+    const name = clip.name || `clip-${Date.now()}.webm`;
+    const a = document.createElement('a');
+    a.href = clip.url;
+    a.textContent = name;
+    a.download = name;
+    li.appendChild(a);
+
+    const play = document.createElement('button');
+    play.textContent = 'Reproducir';
+    play.onclick = () => {
+      const w = window.open('', '_blank');
+      w.document.write(`<video controls src="${clip.url}" style="width:100%"></video>`);
+    };
+    li.appendChild(play);
+
+    document.getElementById('clipsList').prepend(li);
+  }
+
+  // Inicializa scanner si quieres
+  const scannerPreview = document.getElementById('scannerPreview');
+  ScannerModule.init(scannerPreview, result => {
+    document.getElementById('scanResult').textContent = result || '—';
+  });
+
+  // Botón opcional conversión (puede tardar o requerir ffmpeg.wasm)
+  document.getElementById('convertBtn').onclick = async () => {
+    const last = document.querySelector('#clipsList a');
+    if (!last) return alert('No hay clips.');
+    const resp = await fetch(last.href);
+    const blob = await resp.blob();
+    alert('La conversión en navegador (ffmpeg.wasm) es pesada. ¿Quieres que te dé la opción local?');
+    // Aquí podrías llamar a una función en ffmpeg-wrapper.js
+  };
+
+</script>
+</body>
+</html>
